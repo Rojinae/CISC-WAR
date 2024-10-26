@@ -1,85 +1,160 @@
-
 from bauhaus import Encoding, proposition, constraint
 from bauhaus.utils import count_solutions, likelihood
-
-# These two lines make sure a faster SAT solver is used.
 from nnf import config
-config.sat_backend = "kissat"
 
-# Encoding that will store all of your constraints
+# Setting up the SAT solver backend for efficient processing
+config.sat_backend = "kissat"
 E = Encoding()
 
-# To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
+# Constants representing the ranks and suits of a standard deck of cards
+RANKS = list(range(1, 14))
+SUITS = ["hearts", "diamonds", "clubs", "spades"]
+
 @proposition(E)
-class BasicPropositions:
+class Card:
+    """
+    Represents a single playing card with a rank and suit.
+    """
+    def __init__(self, rank, suit):
+        self.rank = rank
+        self.suit = suit
 
-    def __init__(self, data):
-        self.data = data
+    def __repr__(self):
+        return f"{self.rank} of {self.suit}"
 
-    def _prop_name(self):
-        return f"A.{self.data}"
-
-
-# Different classes for propositions are useful because this allows for more dynamic constraint creation
-# for propositions within that class. For example, you can enforce that "at least one" of the propositions
-# that are instances of this class must be true by using a @constraint decorator.
-# other options include: at most one, exactly one, at most k, and implies all.
-# For a complete module reference, see https://bauhaus.readthedocs.io/en/latest/bauhaus.html
-@constraint.at_least_one(E)
 @proposition(E)
-class FancyPropositions:
+class Owns:
+    """
+    Indicates whether a player owns a specific card.
+    """
+    def __init__(self, player, card):
+        self.player = player
+        self.card = card
 
-    def __init__(self, data):
-        self.data = data
+    def __repr__(self):
+        return f"{self.player} owns {self.card}"
 
-    def _prop_name(self):
-        return f"A.{self.data}"
+@proposition(E)
+class Plays:
+    """
+    Represents a player playing a specific card in a given round.
+    """
+    def __init__(self, player, card, round_number):
+        self.player = player
+        self.card = card
+        self.round_number = round_number
 
-# Call your variables whatever you want
-a = BasicPropositions("a")
-b = BasicPropositions("b")   
-c = BasicPropositions("c")
-d = BasicPropositions("d")
-e = BasicPropositions("e")
-# At least one of these will be true
-x = FancyPropositions("x")
-y = FancyPropositions("y")
-z = FancyPropositions("z")
+    def __repr__(self):
+        return f"{self.player} plays {self.card} in round {self.round_number}"
 
+@proposition(E)
+class Wins:
+    """
+    Represents a player winning a specific round of the game.
+    """
+    def __init__(self, player, round_number):
+        self.player = player
+        self.round_number = round_number
 
-# Build an example full theory for your setting and return it.
-#
-#  There should be at least 10 variables, and a sufficiently large formula to describe it (>50 operators).
-#  This restriction is fairly minimal, and if there is any concern, reach out to the teaching staff to clarify
-#  what the expectations are.
-def example_theory():
-    # Add custom constraints by creating formulas with the variables you created. 
-    E.add_constraint((a | b) & ~x)
-    # Implication
-    E.add_constraint(y >> z)
-    # Negate a formula
-    E.add_constraint(~(x & y))
-    # You can also add more customized "fancy" constraints. Use case: you don't want to enforce "exactly one"
-    # for every instance of BasicPropositions, but you want to enforce it for a, b, and c.:
-    constraint.add_exactly_one(E, a, b, c)
+    def __repr__(self):
+        return f"{self.player} wins round {self.round_number}"
 
-    return E
+@proposition(E)
+class HigherRank:
+    """
+    Represents a rank comparison between two cards.
+    Indicates that card x has a higher rank than card y.
+    """
+    def __init__(self, card_x, card_y):
+        self.card_x = card_x
+        self.card_y = card_y
 
+    def __repr__(self):
+        return f"Rank of {self.card_x} > Rank of {self.card_y}"
+
+@proposition(E)
+class SameRank:
+    """
+    Represents a rank comparison between two cards.
+    Indicates that card x has the same rank as card y.
+    """
+    def __init__(self, card_x, card_y):
+        self.card_x = card_x
+        self.card_y = card_y
+
+    def __repr__(self):
+        return f"Rank of {self.card_x} = Rank of {self.card_y}"
+
+@proposition(E)
+class Tie:
+    """
+    Represents a tie in a specific round.
+    """
+    def __init__(self, round_number):
+        self.round_number = round_number
+
+    def __repr__(self):
+        return f"Tie in round {self.round_number}"
+
+@constraint(E)
+def setup_unique_ownership():
+    """
+    Ensures that each card in the deck is owned by exactly one player.
+    This is done by adding a constraint for each card that it must be owned by either Player A or Player B.
+    """
+    all_cards = [Card(rank, suit) for rank in RANKS for suit in SUITS]
+    for card in all_cards:
+        owns_A = Owns("Player A", card)
+        owns_B = Owns("Player B", card)
+        E.add_constraint(owns_A ^ owns_B)
+
+@constraint(E)
+def enforce_game_rules():
+    """
+    Enforces the game rules including playing one card per round, determining the winner,
+    and handling ties based on rank comparisons.
+    """
+    for round_number in range(1, 53):
+        # Ensuring each player plays exactly one card per round
+        plays_A = [Plays("Player A", Card(rank, suit), round_number) for rank in RANKS for suit in SUITS]
+        plays_B = [Plays("Player B", Card(rank, suit), round_number) for rank in RANKS for suit in SUITS]
+        
+        E.add_constraint(sum(plays_A) == 1)
+        E.add_constraint(sum(plays_B) == 1)
+
+        # Adding rank comparison logic to determine winners and ties
+        for rank_x in RANKS:
+            for rank_y in RANKS:
+                for suit_x in SUITS:
+                    for suit_y in SUITS:
+                        card_x = Card(rank_x, suit_x)
+                        card_y = Card(rank_y, suit_y)
+                        if rank_x > rank_y:
+                            E.add_constraint(
+                                (Plays("Player A", card_x, round_number) ∧ Plays("Player B", card_y, round_number) ∧ HigherRank(card_x, card_y)) →
+                                Wins("Player A", round_number)
+                            )
+                        elif rank_x == rank_y:
+                            E.add_constraint(
+                                (Plays("Player A", card_x, round_number) ∧ Plays("Player B", card_y, round_number) ∧ SameRank(card_x, card_y)) →
+                                Tie(round_number)
+                            )
+
+def setup_game():
+    """
+    Initializes the game by setting up the unique ownership and game rules.
+    """
+    setup_unique_ownership()
+    enforce_game_rules()
+
+def analyze_game():
+    """
+    Analyzes the game to determine how many solutions exist that satisfy all constraints
+    and calculates the likelihood of Player A winning the first round.
+    """
+    print("Total Solutions:", count_solutions(E))
+    print("Likelihood of Player A winning first round:", likelihood(E, Wins("Player A", 1)))
 
 if __name__ == "__main__":
-
-    T = example_theory()
-    # Don't compile until you're finished adding all your constraints!
-    T = T.compile()
-    # After compilation (and only after), you can check some of the properties
-    # of your model:
-    print("\nSatisfiable: %s" % T.satisfiable())
-    print("# Solutions: %d" % count_solutions(T))
-    print("   Solution: %s" % T.solve())
-
-    print("\nVariable likelihoods:")
-    for v,vn in zip([a,b,c,x,y,z], 'abcxyz'):
-        # Ensure that you only send these functions NNF formulas
-        # Literals are compiled to NNF here
-        print(" %s: %.2f" % (vn, likelihood(T, v)))
-    print()
+    setup_game()
+    analyze_game()
