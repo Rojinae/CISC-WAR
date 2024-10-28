@@ -12,7 +12,7 @@ Our project models the classic card game "War," analyzing its structure through 
 
 ## Structure
 
-* `documents`: Contains folders with our draft and will have our final submissions. README.md files are included in both.
+* `documents`: Contains folders with our draft and will have our final submissions. README.md files are included in both folders. The draft folder also contains file `proofs.jp`.
 * `test.py`:  The script will check for the right files and sufficient theory size.
 * `run.py`: A general wrapper script that includes all encodings for our key constraints and propositions
 * `proofs.jp`: Include broken down gameplay scenario jape proofs with explanations
