@@ -1,8 +1,9 @@
 # CISC/CMPE 204 Modelling Project
 
-Welcome to the major project for CISC/CMPE 204!
+Welcome to our project for CISC/CMPE 204!
 
-Our project models the classic card game "War," analyzing its structure through logic and probability to simulate gameplay and explore theoretical outcomes. The project aims to provide insights into strategies and probabilities associated with each player’s moves, allowing for analysis of possible game states, player advantages, and potential infinite loops that may lead to draws.
+Our project models the classic card game "War," analyzing its structure through logic and probability to simulate gameplay and explore theoretical outcomes. Our project aims to provide strategies and probabilities associated with each player’s moves, through key propositions (like who wins a round, whether a player's card is higher, and whether the deck is stacked) and constraints (such as Player A winning only when their card is higher). In War, two players each reveal the top card of their 26-card deck and the player with the higher card wins both cards. A "war" occurs if cards match, and extra cards are played until a winner is found.
+
 
 ## Members
 * Rojina E
@@ -11,9 +12,12 @@ Our project models the classic card game "War," analyzing its structure through 
 
 ## Structure
 
-* `documents`: Contains folders for both of your draft and final submissions. README.md files are included in both.
-* `run.py`: General wrapper script that you can choose to use or not. Only requirement is that you implement the one function inside of there for the auto-checks.
+* `documents`: Contains folders with our draft and will have our final submissions. README.md files are included in both.
+* `run.py`: General wrapper script that can be used. The Only requirement is to implement the one function inside for the auto-checks.
 * `test.py`: Run this file to confirm that your submission has everything required. This essentially just means it will check for the right files and sufficient theory size.
+* `run.py/`: Includes all encodings for our key constraints and propositions
+* `proofs.jp/`: Include broken down gameplay scenario jape proofs with explanations
+
 
 ## Running With Docker
 
