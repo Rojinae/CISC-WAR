@@ -1,21 +1,26 @@
-CONJECTUREPANEL Conjectures
-PROOF "∀x (OwnsA(x) → ¬OwnsB(x)) ⊢ ¬∃x (OwnsA(x) ∧ OwnsB(x))"
-INFER ∀x (OwnsA(x) → ¬OwnsB(x)) ⊢ ¬∃x (OwnsA(x) ∧ OwnsB(x)) 
 
-FORMULAE
-0 ∀x (OwnsA(x) → ¬OwnsB(x)),     // Universal premise: if Player A owns a card, Player B does not own it
-1 ∃x (OwnsA(x) ∧ OwnsB(x)),       // Assumption for proof by contradiction: there exists a card owned by both players
-2 OwnsA(i) ∧ OwnsB(i),             // Existential instantiation from assumption (specific instance i)
-3 OwnsA(i),                        // Conjunction elimination on line 2
-4 OwnsB(i),                        // Conjunction elimination on line 2
-5 OwnsA(i) → ¬OwnsB(i),            // Universal elimination of line 0 for instance i
-6 ¬OwnsB(i),                       // Modus Ponens on lines 3 and 5
-7 OwnsB(i) ∧ ¬OwnsB(i),            // Conjunction introduction on lines 4 and 6, leading to a contradiction
+CONJECTUREPANEL Conjectures
+PROOF "∀k (Tie(k) → FinalTie(k)) ⊢ ¬∃k (Tie(k) ∧ ¬FinalTie(k))"
+INFER ∀k (Tie(k) → FinalTie(k)) ⊢ ¬∃k (Tie(k) ∧ ¬FinalTie(k)) 
+
+FORMULAE                    
+0 ∀k (Tie(k) → FinalTie(k)),       // Universal premise: if there is a tie in round k, it results in a final tie
+1 ∃k (Tie(k) ∧ ¬FinalTie(k)),      // Assumption for proof by contradiction: there exists a round with a tie that is not final
+2 Tie(i) ∧ ¬FinalTie(i),           // Existential instantiation from assumption (specific instance i)
+3 Tie(i),                          // Conjunction elimination on line 2
+4 ¬FinalTie(i),                    // Conjunction elimination on line 2
+5 Tie(i) → FinalTie(i),            // Universal elimination of line 0 for instance i
+6 FinalTie(i),                     // Modus Ponens on lines 3 and 5
+7 FinalTie(i) ∧ ¬FinalTie(i),      // Conjunction introduction on lines 4 and 6, leading to a contradiction
 8 ⊥                                // Contradiction from line 7
-9 ¬∃x (OwnsA(x) ∧ OwnsB(x))        // Conclusion: negation of the assumption in line 1
+9 ¬∃k (Tie(k) ∧ ¬FinalTie(k))      // Conclusion: negation of the assumption in line 1
 IS
+
 SEQ ("→ intro"[1\9,8]) ("∀ elim"[0\5]) (hyp[0\8]) ("∃ elim"[1,2,3\3,2]) (hyp[1\7]) ("∧ elim"[2,3\4]) ("∧ elim"[2,4\5]) ("→ elim"[3\5,6]) (hyp[5\6]) ("∧ intro"[4,6\7]) ("⊥ intro"[7\8])
 END
+
+
+
 
 CONJECTUREPANEL Conjectures
 PROOF "Plays(A, C_A, round) ∧ Plays(B, C_B, round) ∧ HigherRank(C_A, C_B) ⊢ Wins(A, round)"
