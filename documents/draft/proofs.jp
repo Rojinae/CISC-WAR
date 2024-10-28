@@ -20,8 +20,6 @@ SEQ ("→ intro"[1\9,8]) ("∀ elim"[0\5]) (hyp[0\8]) ("∃ elim"[1,2,3\3,2]) (h
 END
 
 
-
-
 CONJECTUREPANEL Conjectures
 PROOF "Plays(A, C_A, round) ∧ Plays(B, C_B, round) ∧ HigherRank(C_A, C_B) ⊢ Wins(A, round)"
 INFER Plays(A, C_A, round),
