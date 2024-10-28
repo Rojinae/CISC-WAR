@@ -2,7 +2,12 @@
 
 Welcome to the major project for CISC/CMPE 204!
 
-Change this README.md file to summarize your project, and provide pointers to the general structure of the repository. How you organize and build things (which files, how you structure things, etc) is entirely up to you! The only things you must keep in place are what is already listed in the **Structure** section below.
+Our project models the classic card game "War," analyzing its structure through logic and probability to simulate gameplay and explore theoretical outcomes. The project aims to provide insights into strategies and probabilities associated with each player’s moves, allowing for analysis of possible game states, player advantages, and potential infinite loops that may lead to draws.
+
+## Members
+* Rojina E
+* Marcela Rojas 
+* Sara Rodriguez-Bowen
 
 ## Structure
 
