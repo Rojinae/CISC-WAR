@@ -153,8 +153,6 @@ def handle_tie_breaking():
     """Implements refined multi-round tie-breaking logic."""
     for round_number in range(1, 27):
         if Tie(round_number):
-            tie_resolved = False
-            
             for tie_round in range(1, 4):  # Handle up to 3 tie-breaking rounds
                 tie_plays_A = [Plays("Player A", card, round_number + tie_round) for card in deck]
                 tie_plays_B = [Plays("Player B", card, round_number + tie_round) for card in deck]
@@ -165,6 +163,7 @@ def handle_tie_breaking():
 
                 for card_x in deck:
                     for card_y in deck:
+                        # Check if Player A or Player B wins in the tie-breaker round
                         E.add_constraint(
                             (Plays("Player A", card_x, round_number + tie_round) &
                              Plays("Player B", card_y, round_number + tie_round) &
@@ -177,15 +176,15 @@ def handle_tie_breaking():
                              HigherRank(card_y, card_x)) >>
                             Wins("Player B", round_number)
                         )
-                        
-                        # Set tie_resolved flag to true if a winner is found
-                        tie_resolved = (Wins("Player A", round_number) | Wins("Player B", round_number))
+
+                # Exit early if a winner is found
+                if Wins("Player A", round_number) or Wins("Player B", round_number):
+                    break
 
             # If no winner after 3 tie-breaker rounds, mark it as a final tie
-            if not tie_resolved:
-                E.add_constraint(FinalTie(round_number))
-                E.add_constraint(~(Wins("Player A", round_number) | Wins("Player B", round_number)))
-                
+            E.add_constraint(FinalTie(round_number))
+            E.add_constraint(~(Wins("Player A", round_number) | Wins("Player B", round_number)))
+        
 @constraint(E)
 def determine_overall_winner():
     """Determines the overall winner based on total rounds won."""
@@ -196,28 +195,41 @@ def determine_overall_winner():
     E.add_constraint((total_wins_a > total_wins_b) >> OverallWinner("Player A"))
     # If Player B wins more rounds, they are the overall winner
     E.add_constraint((total_wins_b > total_wins_a) >> OverallWinner("Player B"))
+    # Handle tie in overall wins (if needed)
+    E.add_constraint((total_wins_a == total_wins_b) >> FinalTie("game"))
 
 @constraint(E)
 def setup_stacked_deck_for_player(player):
-    """Sets up a stacked deck to maximize wins for the specified player."""
+    """Sets up a stacked deck where the specified player wins every round."""
+    # Divide the deck into two halves: one for the stacked player, one for the opponent
     stacked_cards = sorted(deck, key=lambda c: c.rank, reverse=True)[:26]
     other_cards = sorted(deck, key=lambda c: c.rank)[26:]
 
     for round_number in range(1, 27):
         if player == "Player A":
-            card_a, card_b = stacked_cards[round_number - 1], other_cards[round_number - 1]
+            # Player A gets the higher-ranked card
+            card_a = stacked_cards[round_number - 1]
+            card_b = other_cards[round_number - 1]
         else:
-            card_b, card_a = stacked_cards[round_number - 1], other_cards[round_number - 1]
+            # Player B gets the higher-ranked card
+            card_b = stacked_cards[round_number - 1]
+            card_a = other_cards[round_number - 1]
 
+        # Player plays the card they own
         E.add_constraint(Plays("Player A", card_a, round_number) & Owns("Player A", card_a))
         E.add_constraint(Plays("Player B", card_b, round_number) & Owns("Player B", card_b))
-        E.add_constraint(Wins(player, round_number))
+
+        # Ensure the stacked player wins each round
+        if player == "Player A":
+            E.add_constraint(HigherRank(card_a, card_b) >> Wins("Player A", round_number))
+        else:
+            E.add_constraint(HigherRank(card_b, card_a) >> Wins("Player B", round_number))
 
 def analyze_stacked_deck_outcomes(player):
     """Analyzes outcomes with a stacked deck ensuring wins for the specified player."""
     setup_stacked_deck_for_player(player)
-    total_wins = sum([count_solutions(E, Wins(player, r)) for r in range(1, 27)])
-    overall_winner = count_solutions(E, OverallWinner(player))
+    total_wins = sum([likelihood(E, Wins(player, r)) for r in range(1, 27)])
+    overall_winner = likelihood(E, OverallWinner(player))
 
     print(f"Total guaranteed wins for {player} with a stacked deck: {total_wins}")
     print(f"Is {player} the overall winner with a stacked deck? {'Yes' if overall_winner > 0 else 'No'}")
