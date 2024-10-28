@@ -1,0 +1,34 @@
+CONJECTUREPANEL Conjectures
+PROOF "∀x (OwnsA(x) → ¬OwnsB(x)) ⊢ ¬∃x (OwnsA(x) ∧ OwnsB(x))"
+INFER ∀x (OwnsA(x) → ¬OwnsB(x)) ⊢ ¬∃x (OwnsA(x) ∧ OwnsB(x)) 
+
+FORMULAE
+0 ∀x (OwnsA(x) → ¬OwnsB(x)),     // Universal premise: if Player A owns a card, Player B does not own it
+1 ∃x (OwnsA(x) ∧ OwnsB(x)),       // Assumption for proof by contradiction: there exists a card owned by both players
+2 OwnsA(i) ∧ OwnsB(i),             // Existential instantiation from assumption (specific instance i)
+3 OwnsA(i),                        // Conjunction elimination on line 2
+4 OwnsB(i),                        // Conjunction elimination on line 2
+5 OwnsA(i) → ¬OwnsB(i),            // Universal elimination of line 0 for instance i
+6 ¬OwnsB(i),                       // Modus Ponens on lines 3 and 5
+7 OwnsB(i) ∧ ¬OwnsB(i),            // Conjunction introduction on lines 4 and 6, leading to a contradiction
+8 ⊥                                // Contradiction from line 7
+9 ¬∃x (OwnsA(x) ∧ OwnsB(x))        // Conclusion: negation of the assumption in line 1
+IS
+SEQ ("→ intro"[1\9,8]) ("∀ elim"[0\5]) (hyp[0\8]) ("∃ elim"[1,2,3\3,2]) (hyp[1\7]) ("∧ elim"[2,3\4]) ("∧ elim"[2,4\5]) ("→ elim"[3\5,6]) (hyp[5\6]) ("∧ intro"[4,6\7]) ("⊥ intro"[7\8])
+END
+
+CONJECTUREPANEL Conjectures
+PROOF "Plays(A, C_A, round) ∧ Plays(B, C_B, round) ∧ HigherRank(C_A, C_B) ⊢ Wins(A, round)"
+INFER Plays(A, C_A, round),
+      Plays(B, C_B, round), 
+      HigherRank(C_A, C_B) ⊢ Wins(A, round)
+FORMULAE
+0 Plays("Player A", C_A, round),                       // Assumption: Player A plays card C_A in this round
+1 Plays("Player B", C_B, round),                       // Assumption: Player B plays card C_B in this round
+2 HigherRank(C_A, C_B),                                // Assumption: Card C_A has a higher rank than C_B
+3 (Plays("Player A", C_A, round) ∧ Plays("Player B", C_B, round) ∧ HigherRank(C_A, C_B)) → Wins("Player A", round) // Game rule: higher rank means Player A wins
+4 Wins("Player A", round)                              // Conclusion from applying Modus Ponens with the rule
+IS
+SEQ ("→ elim"[3\4]) ("∧ intro"[0,1\2]) (hyp[2\4])
+
+
