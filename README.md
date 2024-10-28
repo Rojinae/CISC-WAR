@@ -13,10 +13,10 @@ Our project models the classic card game "War," analyzing its structure through 
 ## Structure
 
 * `documents`: Contains folders with our draft and will have our final submissions. README.md files are included in both.
-* `run.py`: General wrapper script that can be used. The Only requirement is to implement the one function inside for the auto-checks.
-* `test.py`: Run this file to confirm that your submission has everything required. This essentially just means it will check for the right files and sufficient theory size.
-* `run.py/`: Includes all encodings for our key constraints and propositions
-* `proofs.jp/`: Include broken down gameplay scenario jape proofs with explanations
+* `test.py`:  The script will check for the right files and sufficient theory size.
+* `run.py`: A general wrapper script that includes all encodings for our key constraints and propositions
+* `proofs.jp`: Include broken down gameplay scenario jape proofs with explanations
+* `Dockerfile`: File to universally check our code/how our code runs
 
 
 ## Running With Docker
