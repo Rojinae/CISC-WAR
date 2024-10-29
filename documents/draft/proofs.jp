@@ -1,30 +1,37 @@
-CONJECTUREPANEL Conjectures
-PROOF "A → ¬B ⊢ ¬(A ∧ B)"
-INFER A → ¬B ⊢ ¬(A ∧ B)
-IS
-NEXTGOAL
-END
-CONJECTUREPANEL Conjectures
-PROOF "T → FT ⊢ ¬(¬T ∧ F)"
-INFER T → FT ⊢ ¬(¬T ∧ F)
-IS
-NEXTGOAL
-END
-CONJECTUREPANEL Conjectures
-PROOF "A → ¬T ⊢ ¬(A ∧ T)"
-INFER A → ¬T ⊢ ¬(A ∧ T)
-IS
-NEXTGOAL
-END
-CONJECTUREPANEL Conjectures
-PROOF "A ∨ B, A → ¬T, B→¬T, ¬(A∧B) ⊢ ¬T → (A∨B)"
-INFER A ∨ B, A → ¬T, B→¬T, ¬(A∧B) ⊢ ¬T → (A∨B)
-IS
-NEXTGOAL
-END
-ONJECTUREPANEL Conjectures
-PROOF "A ∨ B, A → ¬T, B→¬T, ¬(A∧B) ⊢ ¬T → (A∨B)"
-INFER A ∨ B, A → ¬T, B→¬T, ¬(A∧B) ⊢ ¬T → (A∨B)
-IS
-NEXTGOAL
-END
+// Proof 1: Exclusive Ownership of Cards
+proof Exclusive_Ownership
+  goal: ¬ (OwnsA(x) ∧ OwnsB(x))
+  premise: OwnsA(x) → ¬OwnsB(x)
+  proof:
+    1. OwnsA(x) → ¬OwnsB(x)        premise
+    2. ¬(OwnsA(x) ∧ OwnsB(x))      conclusion from 1 by implication
+
+// Proof 2: Winning Round Implies Ownership and Higher Rank
+proof Winning_Implies_HighRank
+  goal: WinsA(r) → (OwnsA(c1) ∧ ¬SameRank(c1, c2))
+  premise: PlaysA(c1, r) → OwnsA(c1)
+  premise: WinsA(r) → (PlaysA(c1, r) ∧ PlaysB(c2, r) ∧ HigherRank(c1, c2))
+  premise: HigherRank(c1, c2) → ¬SameRank(c1, c2)
+  proof:
+    1. PlaysA(c1, r) → OwnsA(c1)                     premise
+    2. WinsA(r) → (PlaysA(c1, r) ∧ PlaysB(c2, r) ∧ HigherRank(c1, c2))    premise
+    3. HigherRank(c1, c2) → ¬SameRank(c1, c2)        premise
+    4. WinsA(r)                                      assumption
+    5. PlaysA(c1, r) ∧ PlaysB(c2, r) ∧ HigherRank(c1, c2)  from 4, 2 by modus ponens
+    6. HigherRank(c1, c2)                            from 5 by conjunction elimination
+    7. ¬SameRank(c1, c2)                             from 6, 3 by modus ponens
+    8. PlaysA(c1, r)                                 from 5 by conjunction elimination
+    9. OwnsA(c1)                                     from 8, 1 by modus ponens
+    10. OwnsA(c1) ∧ ¬SameRank(c1, c2)                from 9, 7 by conjunction introduction
+
+// Proof 3: Ownership Implies Exclusivity in Play
+proof Ownership_Exclusivity
+  goal: PlaysA(c, r) → ¬OwnsB(c)
+  premise: PlaysA(c, r) → OwnsA(c)
+  premise: OwnsA(c) → ¬OwnsB(c)
+  proof:
+    1. PlaysA(c, r) → OwnsA(c)                       premise
+    2. OwnsA(c) → ¬OwnsB(c)                          premise
+    3. PlaysA(c, r)                                  assumption
+    4. OwnsA(c)                                      from 3, 1 by modus ponens
+    5. ¬OwnsB(c)                                     from 4, 2 by modus ponens
