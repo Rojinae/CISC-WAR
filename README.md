@@ -4,6 +4,11 @@ Welcome to our project for CISC/CMPE 204!
 
 Our project models the classic card game "War," analyzing its structure through logic and probability to simulate gameplay and explore theoretical outcomes. Our project aims to provide strategies and probabilities associated with each player’s moves, through key propositions (like who wins a round, whether a player's card is higher, and whether the deck is stacked) and constraints (such as Player A winning only when their card is higher). In War, two players each reveal the top card of their 26-card deck and the player with the higher card wins both cards. A "war" occurs if cards match, and extra cards are played until a winner is found.
 
+To run our current model and see our solutions, the project should run out of `run.py`. Our model will build rules, and conditions for winning, and will also solve various example scenarios to provide insight into probabilities and outcomes
+
+For more information on our game analysis, read our `modelling_report_draft.docx`.
+
+
 
 ## Members
 * Rojina E
