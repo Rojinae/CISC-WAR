@@ -1,90 +1,30 @@
 CONJECTUREPANEL Conjectures
-PROOF "Owns(Player A, card) → ¬Owns(Player B, card) ⊢ ¬(Owns(Player A, card) ∧ Owns(Player B, card))"
-INFER Owns(Player A, card) → ¬Owns(Player B, card) ⊢ ¬(Owns(Player A, card) ∧ Owns(Player B, card))
-
-FORMULAE
-0 Owns(Player A, card) → ¬Owns(Player B, card),   // If Player A owns the card, Player B does not.
-1 Owns(Player A, card) ∧ Owns(Player B, card),    // Assumption for proof by contradiction: Both players own the card.
-2 Owns(Player A, card),                           // Conjunction elimination on line 1.
-3 Owns(Player B, card),                           // Conjunction elimination on line 1.
-4 ¬Owns(Player B, card),                          // Modus Ponens on lines 0 and 2.
-5 Owns(Player B, card) ∧ ¬Owns(Player B, card),   // Conjunction introduction on lines 3 and 4, leading to a contradiction.
-6 ⊥                                               // Contradiction from line 5.
-7 ¬(Owns(Player A, card) ∧ Owns(Player B, card))  // Conclusion: negation of the assumption in line 1.
-
+PROOF "A → ¬B ⊢ ¬(A ∧ B)"
+INFER A → ¬B ⊢ ¬(A ∧ B)
 IS
-SEQ ("→ intro"[1\7,6]) (hyp[0\6]) (hyp[1\5]) ("∧ elim"[1,2\2]) ("∧ elim"[1,3\3]) ("→ elim"[2,0\4]) ("∧ intro"[3,4\5]) ("⊥ intro"[5\6])
+NEXTGOAL
 END
-
-
-
 CONJECTUREPANEL Conjectures
-PROOF "Tie(round) → FinalTie(round) ⊢ ¬(Tie(round) ∧ ¬FinalTie(round))"
-INFER Tie(round) → FinalTie(round) ⊢ ¬(Tie(round) ∧ ¬FinalTie(round))
-
-FORMULAE
-0 Tie(round) → FinalTie(round),                  // If there is a tie in a round, it results in a final tie if unresolved.
-1 Tie(round) ∧ ¬FinalTie(round),                 // Assumption for proof by contradiction: Tie exists but does not result in FinalTie.
-2 Tie(round),                                    // Conjunction elimination on line 1.
-3 ¬FinalTie(round),                              // Conjunction elimination on line 1.
-4 Tie(round) → FinalTie(round),                  // Restate line 0 for application.
-5 FinalTie(round),                               // Modus Ponens on lines 2 and 4.
-6 FinalTie(round) ∧ ¬FinalTie(round),            // Conjunction introduction on lines 3 and 5, leading to contradiction.
-7 ⊥                                              // Contradiction from line 6.
-8 ¬(Tie(round) ∧ ¬FinalTie(round))               // Conclusion: negation of the assumption in line 1.
-
+PROOF "T → FT ⊢ ¬(¬T ∧ F)"
+INFER T → FT ⊢ ¬(¬T ∧ F)
 IS
-SEQ ("→ intro"[1\8,7]) (hyp[0\7]) (hyp[1\6]) ("∧ elim"[1,2\2]) ("∧ elim"[1,3\3]) ("→ elim"[2,0\5]) ("∧ intro"[3,5\6]) ("⊥ intro"[6\7])
+NEXTGOAL
 END
-
-
 CONJECTUREPANEL Conjectures
-PROOF "WinA → ¬Tie ⊢ ¬(WinA ∧ Tie)"
-INFER WinA → ¬Tie ⊢ ¬(WinA ∧ Tie)
-
-FORMULAE
-0 WinA → ¬Tie                  // Premise: if Player A wins the round, the round cannot be a tie.
-1 WinA ∧ Tie                   // Assumption for proof by contradiction: assume Player A wins, and the round is also a tie.
-2 WinA                          // Conjunction elimination on line 1.
-3 Tie                           // Conjunction elimination on line 1.
-4 ¬Tie                          // Modus Ponens on lines 0 and 2.
-5 Tie ∧ ¬Tie                    // Conjunction introduction on lines 3 and 4, leading to a contradiction.
-6 ⊥                             // Contradiction from line 5.
-7 ¬(WinA ∧ Tie)                 // Conclusion: negation of the assumption in line 1.
-
+PROOF "A → ¬T ⊢ ¬(A ∧ T)"
+INFER A → ¬T ⊢ ¬(A ∧ T)
 IS
-SEQ ("→ intro"[1\7,6]) (hyp[0\6]) (hyp[1\5]) ("∧ elim"[1,2\2]) ("∧ elim"[1,3\3]) ("→ elim"[2,0\4]) ("∧ intro"[3,4\5]) ("⊥ intro"[5\6])
+NEXTGOAL
 END
-
-
-
-
 CONJECTUREPANEL Conjectures
-PROOF "Plays(A, C_A, round) ∧ Plays(B, C_B, round) ∧ HigherRank(C_A, C_B) ⊢ Wins(A, round)"
-INFER Plays(A, C_A, round),
-      Plays(B, C_B, round), 
-      HigherRank(C_A, C_B) ⊢ Wins(A, round)
-FORMULAE
-0 Plays("Player A", C_A, round),                       // Assumption: Player A plays card C_A in this round
-1 Plays("Player B", C_B, round),                       // Assumption: Player B plays card C_B in this round
-2 HigherRank(C_A, C_B),                                // Assumption: Card C_A has a higher rank than C_B
-3 (Plays("Player A", C_A, round) ∧ Plays("Player B", C_B, round) ∧ HigherRank(C_A, C_B)) → Wins("Player A", round) // Game rule: higher rank means Player A wins
-4 Wins("Player A", round)                              // Conclusion from applying Modus Ponens with the rule
+PROOF "A ∨ B, A → ¬T, B→¬T, ¬(A∧B) ⊢ ¬T → (A∨B)"
+INFER A ∨ B, A → ¬T, B→¬T, ¬(A∧B) ⊢ ¬T → (A∨B)
 IS
-SEQ ("→ elim"[3\4]) ("∧ intro"[0,1\2]) (hyp[2\4])
-
-
-
-CONJECTUREPANEL Conjectures
-PROOF "(TotalWins_A > TotalWins_B) ⊢ OverallWinner(Player A)"
-INFER (TotalWins_A > TotalWins_B) ⊢ OverallWinner(Player A)
-
-FORMULAE
-0 TotalWins_A > TotalWins_B,                    // Premise: Player A wins more rounds than Player B.
-1 OverallWinner(Player B),                       // Assumption for proof by contradiction: Player B is declared overall winner.
-2 ¬OverallWinner(Player B),                      // Derived from line 0 because Player A has more wins.
-3 OverallWinner(Player A),                       // Conclusion by contradiction.
-
+NEXTGOAL
+END
+ONJECTUREPANEL Conjectures
+PROOF "A ∨ B, A → ¬T, B→¬T, ¬(A∧B) ⊢ ¬T → (A∨B)"
+INFER A ∨ B, A → ¬T, B→¬T, ¬(A∧B) ⊢ ¬T → (A∨B)
 IS
-SEQ ("→ intro"[0\3])
-
+NEXTGOAL
+END
