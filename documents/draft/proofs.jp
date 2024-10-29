@@ -34,7 +34,6 @@ IS
 SEQ ("∧ elim"[A B 4]) ("→ elim"[A B 3 0]) ("∧ intro"[A B 5 7]) (hyp[A 4]) (hyp[A 3]) (cut[B C 0 0]) ("→ elim"[A B 5 6]) (hyp[A 6]) (hyp[A 2])
 END
 
-
 CONJECTUREPANEL Conjectures
 PROOF "PlaysA(c, r) → ¬OwnsB(c) ⊢ PlaysA(c, r) → OwnsA(c) ∧ OwnsA(c) → ¬OwnsB(c)"
 INFER PlaysA(c, r) → OwnsA(c)
@@ -46,6 +45,8 @@ FORMULAE
 2 OwnsA(c)
 3 PlaysA(c, r) → OwnsA(c)
 4 OwnsA(c) → ¬OwnsB(c)
+5 PlaysA(c, r) → ¬OwnsB(c)
 IS
-SEQ ("→ elim"[A B 1 3]) ("¬ intro"[C 0]) ("∧ elim"[A 1]) ("∧ elim"[B 2]) (hyp[A 1]) (hyp[A 2]) (cut[A 0 0]) (hyp[A 3]) (hyp[A 4])
+SEQ ("→ elim" A B 1 3) ("→ elim" C D 2 4) ("→ intro" E F 5 0)
 END
+
