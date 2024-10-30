@@ -148,42 +148,52 @@ def enforce_game_rules():
             ~(Wins("Player A", round_number) & Wins("Player B", round_number))
         )
 
+
 @constraint(E)
 def handle_tie_breaking():
-    """Implements refined multi-round tie-breaking logic."""
+    """Implements the card-flipping tie-breaking logic where three cards are flipped face down and the fourth face up."""
     for round_number in range(1, 27):
+        # Initial tie-check
         if Tie(round_number):
-            for tie_round in range(1, 4):  # Handle up to 3 tie-breaking rounds
-                tie_plays_A = [Plays("Player A", card, round_number + tie_round) for card in deck]
-                tie_plays_B = [Plays("Player B", card, round_number + tie_round) for card in deck]
+            tie_round = 1
+            while True:
+                # Flip 3 cards face down (not compared), fourth card is compared
+                down_cards_A = [Plays("Player A", card, round_number + tie_round + i) for i, card in enumerate(deck[:3])]
+                down_cards_B = [Plays("Player B", card, round_number + tie_round + i) for i, card in enumerate(deck[:3])]
+                decisive_card_A = Plays("Player A", deck[3], round_number + tie_round + 3)
+                decisive_card_B = Plays("Player B", deck[3], round_number + tie_round + 3)
 
-                # Ensure each player plays exactly one card per tie-breaker round
-                E.add_constraint(sum(tie_plays_A) == 1)
-                E.add_constraint(sum(tie_plays_B) == 1)
+                # Enforce that each player flips three cards before the decisive comparison
+                E.add_constraint(sum(down_cards_A) == 3)
+                E.add_constraint(sum(down_cards_B) == 3)
+                
+                # Ensure each player plays exactly one card for comparison
+                E.add_constraint(sum([decisive_card_A]) == 1)
+                E.add_constraint(sum([decisive_card_B]) == 1)
 
                 for card_x in deck:
                     for card_y in deck:
-                        # Check if Player A or Player B wins in the tie-breaker round
+                        # Tie-breaking win conditions for the decisive card
                         E.add_constraint(
-                            (Plays("Player A", card_x, round_number + tie_round) &
-                             Plays("Player B", card_y, round_number + tie_round) &
-                             HigherRank(card_x, card_y)) >>
+                            (decisive_card_A & decisive_card_B & HigherRank(card_x, card_y)) >>
                             Wins("Player A", round_number)
                         )
                         E.add_constraint(
-                            (Plays("Player B", card_y, round_number + tie_round) &
-                             Plays("Player A", card_x, round_number + tie_round) &
-                             HigherRank(card_y, card_x)) >>
+                            (decisive_card_B & decisive_card_A & HigherRank(card_y, card_x)) >>
                             Wins("Player B", round_number)
                         )
 
-                # Exit early if a winner is found
+                # Exit if a winner is found
                 if Wins("Player A", round_number) or Wins("Player B", round_number):
                     break
 
-            # If no winner after 3 tie-breaker rounds, mark it as a final tie
+                # Otherwise, repeat the tie-breaking process with new cards
+                tie_round += 4
+
+            # If no winner after multiple rounds of tie-breaking, mark it as a final tie
             E.add_constraint(FinalTie(round_number))
             E.add_constraint(~(Wins("Player A", round_number) | Wins("Player B", round_number)))
+
         
 @constraint(E)
 def determine_overall_winner():
