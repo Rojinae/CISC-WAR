@@ -1,7 +1,22 @@
-CONJECTUREPANEL Conjectures
-CURRENTPROOF "A→¬B ⊢¬(A∧B) "
-INFER A→¬B
+﻿CONJECTUREPANEL Conjectures
+PROOF "A→¬B ⊢¬(A∧B) "
+INFER A→¬B 
      ⊢ ¬(A∧B)
+FORMULAE
+0 ⊥,
+1 ¬B,
+2 B,
+3 A,
+4 A→¬B,
+5 A∧B 
+IS
+SEQ ("¬ intro"[A\5]) (cut[B,C\2,0]) (LAYOUT "∧ elim" (0) ("∧ elim(R)"[A,B\3,2]) (hyp[A\5])) (cut[B,C\3,0]) (LAYOUT "∧ elim" (0) ("∧ elim(L)"[A,B\3,2]) (hyp[A\5])) (cut[B,C\1,0]) ("→ elim"[A,B\3,1]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Conjectures
+CURRENTPROOF "Pa→A, A→¬B ⊢  Pa→¬B"
+INFER Pa→A,
+     A→¬B 
+     ⊢ Pa→¬B 
 IS
 NEXTGOAL
 END
@@ -11,14 +26,6 @@ INFER P→A,
      Q→(P∧B∧H),
      H→¬S 
      ⊢ Q→(A∧¬S)
-IS
-NEXTGOAL
-END
-CONJECTUREPANEL Conjectures
-CURRENTPROOF "Pa→A, A→¬B ⊢  Pa→¬B"
-INFER Pa→A,
-      A→¬B
-     ⊢ Pa→¬B
 IS
 NEXTGOAL
 END
