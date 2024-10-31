@@ -1,52 +1,24 @@
-
-
 CONJECTUREPANEL Conjectures
-PROOF "OwnsA(x) → ¬OwnsB(x) ⊢ ¬(OwnsA(x) ∧ OwnsB(x))"
-INFER OwnsA(x) → ¬OwnsB(x)
-     ⊢ ¬(OwnsA(x) ∧ OwnsB(x))
-FORMULAE
-0 ¬(OwnsA(x) ∧ OwnsB(x))
-1 OwnsA(x)
-2 ¬OwnsB(x)
-3 OwnsB(x)
-4 OwnsA(x) → ¬OwnsB(x)
+CURRENTPROOF "A→¬B ⊢¬(A∧B) "
+INFER A→¬B
+     ⊢ ¬(A∧B)
 IS
-SEQ ("→ elim"[A,B 1 4]) ("¬ intro"[C 0]) ("∧ elim"[A 1]) ("∧ elim"[B 3]) (hyp[A 1]) (hyp[A 3]) (cut[A 0 0]) (hyp[A 4]) (hyp[A 2])
+NEXTGOAL
 END
-
 CONJECTUREPANEL Conjectures
-PROOF "WinsA(r) → (OwnsA(c1) ∧ ¬SameRank(c1, c2)) ⊢ PlaysA(c1, r) → OwnsA(c1) ∧ HigherRank(c1, c2) → ¬SameRank(c1, c2)"
-INFER WinsA(r) → (OwnsA(c1) ∧ ¬SameRank(c1, c2))
-     PlaysA(c1, r) → OwnsA(c1)
-     HigherRank(c1, c2) → ¬SameRank(c1, c2)
-     ⊢ WinsA(r) → (OwnsA(c1) ∧ ¬SameRank(c1, c2))
-FORMULAE
-0 WinsA(r) → (OwnsA(c1) ∧ ¬SameRank(c1, c2))
-1 PlaysA(c1, r) → OwnsA(c1)
-2 HigherRank(c1, c2) → ¬SameRank(c1, c2)
-3 WinsA(r)
-4 PlaysA(c1, r)
-5 OwnsA(c1)
-6 HigherRank(c1, c2)
-7 ¬SameRank(c1, c2)
-8 OwnsA(c1) ∧ ¬SameRank(c1, c2)
+CURRENTPROOF "P→A, Q→(P∧B∧H), H→¬S ⊢ Q→(A∧¬S) "
+INFER P→A,
+     Q→(P∧B∧H),
+     H→¬S 
+     ⊢ Q→(A∧¬S)
 IS
-SEQ ("∧ elim"[A B 4]) ("→ elim"[A B 3 0]) ("∧ intro"[A B 5 7]) (hyp[A 4]) (hyp[A 3]) (cut[B C 0 0]) ("→ elim"[A B 5 6]) (hyp[A 6]) (hyp[A 2])
+NEXTGOAL
 END
-
 CONJECTUREPANEL Conjectures
-PROOF "PlaysA(c, r) → ¬OwnsB(c) ⊢ PlaysA(c, r) → OwnsA(c) ∧ OwnsA(c) → ¬OwnsB(c)"
-INFER PlaysA(c, r) → OwnsA(c)
-     OwnsA(c) → ¬OwnsB(c)
-     ⊢ PlaysA(c, r) → ¬OwnsB(c)
-FORMULAE
-0 ¬OwnsB(c)
-1 PlaysA(c, r)
-2 OwnsA(c)
-3 PlaysA(c, r) → OwnsA(c)
-4 OwnsA(c) → ¬OwnsB(c)
-5 PlaysA(c, r) → ¬OwnsB(c)
+CURRENTPROOF "Pa→A, A→¬B ⊢  Pa→¬B"
+INFER Pa→A,
+      A→¬B
+     ⊢ Pa→¬B
 IS
-SEQ ("→ elim" A B 1 3) ("→ elim" C D 2 4) ("→ intro" E F 5 0)
+NEXTGOAL
 END
-
