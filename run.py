@@ -112,13 +112,13 @@ def setup_rank_comparisons():
 @constraint(E)
 def enforce_game_rules():
     """Enforces core game rules including playing, winning, and tie conditions."""
-    for round_number in range(1, 27):  # 26 rounds for each player
+    for round_number in range(1, 27):  # Assuming 26 rounds to match the number of cards
         plays_A = [Plays("Player A", card, round_number) for card in deck]
         plays_B = [Plays("Player B", card, round_number) for card in deck]
 
         # Ensure each player plays exactly one card per round
-        E.add_constraint(sum(plays_A) == 1)
-        E.add_constraint(sum(plays_B) == 1)
+        E.add_constraint(one_of(plays_A))
+        E.add_constraint(one_of(plays_B))
 
         for card_x in deck:
             for card_y in deck:
@@ -126,7 +126,7 @@ def enforce_game_rules():
                 E.add_constraint(Plays("Player A", card_x, round_number) >> Owns("Player A", card_x))
                 E.add_constraint(Plays("Player B", card_y, round_number) >> Owns("Player B", card_y))
 
-                # Winning and tie conditions
+                # Define win, loss, and tie conditions
                 E.add_constraint(
                     (Plays("Player A", card_x, round_number) & Plays("Player B", card_y, round_number) & HigherRank(card_x, card_y)) >>
                     Wins("Player A", round_number)
@@ -148,6 +148,9 @@ def enforce_game_rules():
             ~(Wins("Player A", round_number) & Wins("Player B", round_number))
         )
 
+def one_of(plays):
+    """Constructs an 'exactly one' logical constraint for the given plays."""
+    return any(plays) & all(~plays[i] | ~plays[j] for i in range(len(plays)) for j in range(len(plays)) if i != j)
 
 @constraint(E)
 def handle_tie_breaking():
