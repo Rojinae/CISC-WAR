@@ -80,20 +80,19 @@ class OverallWinner:
         self.player = player
     def __repr__(self):
         return f"Overall winner is {self.player}"
-        
+
 # Global deck of cards
 deck = [Card(rank, suit) for rank in RANKS for suit in SUITS]
 
 def shuffle_and_setup_deck():
     """Shuffles the deck once and sets up initial ownership."""
     shuffled_deck = deck.copy()
-    random.shuffle(shuffled_deck)  # Shuffle the deck once
+    random.shuffle(shuffled_deck)
 
     midpoint = len(shuffled_deck) // 2
     player_a_cards = shuffled_deck[:midpoint]
     player_b_cards = shuffled_deck[midpoint:]
 
-    # Assign cards to players based on shuffled order
     for card in player_a_cards:
         E.add_constraint(Owns("Player A", card))
     for card in player_b_cards:
@@ -111,22 +110,19 @@ def setup_rank_comparisons():
 
 @constraint(E)
 def enforce_game_rules():
-    """Enforces core game rules including playing, winning, and tie conditions."""
-    for round_number in range(1, 27):  # Assuming 26 rounds to match the number of cards
+    """Core game rules including playing, winning, and tie conditions."""
+    for round_number in range(1, 27):
         plays_A = [Plays("Player A", card, round_number) for card in deck]
         plays_B = [Plays("Player B", card, round_number) for card in deck]
 
-        # Ensure each player plays exactly one card per round
         E.add_constraint(one_of(plays_A))
         E.add_constraint(one_of(plays_B))
 
         for card_x in deck:
             for card_y in deck:
-                # Players must play cards they own
                 E.add_constraint(Plays("Player A", card_x, round_number) >> Owns("Player A", card_x))
                 E.add_constraint(Plays("Player B", card_y, round_number) >> Owns("Player B", card_y))
 
-                # Define win, loss, and tie conditions
                 E.add_constraint(
                     (Plays("Player A", card_x, round_number) & Plays("Player B", card_y, round_number) & HigherRank(card_x, card_y)) >>
                     Wins("Player A", round_number)
@@ -140,117 +136,92 @@ def enforce_game_rules():
                     Tie(round_number)
                 )
 
-        # Enforce mutual exclusivity of outcomes in each round
-        E.add_constraint(
-            Wins("Player A", round_number) | Wins("Player B", round_number) | Tie(round_number)
-        )
-        E.add_constraint(
-            ~(Wins("Player A", round_number) & Wins("Player B", round_number))
-        )
-
-def one_of(plays):
-    """Constructs an 'exactly one' logical constraint for the given plays."""
-    return any(plays) & all(~plays[i] | ~plays[j] for i in range(len(plays)) for j in range(len(plays)) if i != j)
+        E.add_constraint(Wins("Player A", round_number) | Wins("Player B", round_number) | Tie(round_number))
+        E.add_constraint(~(Wins("Player A", round_number) & Wins("Player B", round_number)))
 
 @constraint(E)
 def handle_tie_breaking():
-    """Implements the card-flipping tie-breaking logic where three cards are flipped face down and the fourth face up."""
+    """Improved tie-breaking logic using quantifiers."""
     for round_number in range(1, 27):
-        # Initial tie-check
-        if Tie(round_number):
-            tie_round = 1
-            while True:
-                # Flip 3 cards face down (not compared), fourth card is compared
-                down_cards_A = [Plays("Player A", card, round_number + tie_round + i) for i, card in enumerate(deck[:3])]
-                down_cards_B = [Plays("Player B", card, round_number + tie_round + i) for i, card in enumerate(deck[:3])]
-                decisive_card_A = Plays("Player A", deck[3], round_number + tie_round + 3)
-                decisive_card_B = Plays("Player B", deck[3], round_number + tie_round + 3)
+        E.add_constraint(
+            Tie(round_number) >>
+            resolve_tie_with_quantifiers(round_number)
+        )
 
-                # Enforce that each player flips three cards before the decisive comparison
-                E.add_constraint(sum(down_cards_A) == 3)
-                E.add_constraint(sum(down_cards_B) == 3)
-                
-                # Ensure each player plays exactly one card for comparison
-                E.add_constraint(sum([decisive_card_A]) == 1)
-                E.add_constraint(sum([decisive_card_B]) == 1)
+def resolve_tie_with_quantifiers(initial_round):
+    """Recursive resolution of ties using quantifiers."""
+    constraints = []
+    tie_round = 0
 
-                for card_x in deck:
-                    for card_y in deck:
-                        # Tie-breaking win conditions for the decisive card
-                        E.add_constraint(
-                            (decisive_card_A & decisive_card_B & HigherRank(card_x, card_y)) >>
-                            Wins("Player A", round_number)
-                        )
-                        E.add_constraint(
-                            (decisive_card_B & decisive_card_A & HigherRank(card_y, card_x)) >>
-                            Wins("Player B", round_number)
-                        )
+    while True:
+        current_round = initial_round + tie_round
 
-                # Exit if a winner is found
-                if Wins("Player A", round_number) or Wins("Player B", round_number):
-                    break
+        for player in ["Player A", "Player B"]:
+            constraints.append(
+                all(
+                    Plays(player, card, current_round + i)
+                    for i, card in enumerate(deck[:3])
+                )
+            )
 
-                # Otherwise, repeat the tie-breaking process with new cards
-                tie_round += 4
+        face_up_constraints = []
+        for player, opponent in [("Player A", "Player B"), ("Player B", "Player A")]:
+            face_up_constraints.append(
+                any(
+                    Plays(player, card, current_round + 3) &
+                    ~Owns(opponent, card)
+                    for card in deck
+                )
+            )
+        constraints.append(all(face_up_constraints))
 
-            # If no winner after multiple rounds of tie-breaking, mark it as a final tie
-            E.add_constraint(FinalTie(round_number))
-            E.add_constraint(~(Wins("Player A", round_number) | Wins("Player B", round_number)))
+        decisive_constraints = []
+        for card_x in deck:
+            for card_y in deck:
+                decisive_constraints.append(
+                    (Plays("Player A", card_x, current_round + 3) &
+                     Plays("Player B", card_y, current_round + 3) &
+                     HigherRank(card_x, card_y)) >>
+                    Wins("Player A", initial_round)
+                )
+                decisive_constraints.append(
+                    (Plays("Player B", card_x, current_round + 3) &
+                     Plays("Player A", card_y, current_round + 3) &
+                     HigherRank(card_x, card_y)) >>
+                    Wins("Player B", initial_round)
+                )
+        constraints.append(any(decisive_constraints))
 
-        
+        if Wins("Player A", initial_round) or Wins("Player B", initial_round):
+            break
+
+        tie_round += 4
+
+    constraints.append(
+        ~Wins("Player A", initial_round) & ~Wins("Player B", initial_round) >>
+        FinalTie(initial_round)
+    )
+
+    return all(constraints)
+
 @constraint(E)
 def determine_overall_winner():
     """Determines the overall winner based on total rounds won."""
     total_wins_a = sum([Wins("Player A", r) for r in range(1, 27)])
     total_wins_b = sum([Wins("Player B", r) for r in range(1, 27)])
 
-    # If Player A wins more rounds, they are the overall winner
     E.add_constraint((total_wins_a > total_wins_b) >> OverallWinner("Player A"))
-    # If Player B wins more rounds, they are the overall winner
     E.add_constraint((total_wins_b > total_wins_a) >> OverallWinner("Player B"))
-    # Handle tie in overall wins (if needed)
     E.add_constraint((total_wins_a == total_wins_b) >> FinalTie("game"))
 
-@constraint(E)
-def setup_stacked_deck_for_player(player):
-    """Sets up a stacked deck where the specified player wins every round."""
-    # Divide the deck into two halves: one for the stacked player, one for the opponent
-    stacked_cards = sorted(deck, key=lambda c: c.rank, reverse=True)[:26]
-    other_cards = sorted(deck, key=lambda c: c.rank)[26:]
+def one_of(plays):
+    """Ensures exactly one of the given plays occurs."""
+    return any(plays) & all(~plays[i] | ~plays[j] for i in range(len(plays)) for j in range(len(plays)) if i != j)
 
-    for round_number in range(1, 27):
-        if player == "Player A":
-            # Player A gets the higher-ranked card
-            card_a = stacked_cards[round_number - 1]
-            card_b = other_cards[round_number - 1]
-        else:
-            # Player B gets the higher-ranked card
-            card_b = stacked_cards[round_number - 1]
-            card_a = other_cards[round_number - 1]
-
-        # Player plays the card they own
-        E.add_constraint(Plays("Player A", card_a, round_number) & Owns("Player A", card_a))
-        E.add_constraint(Plays("Player B", card_b, round_number) & Owns("Player B", card_b))
-
-        # Ensure the stacked player wins each round
-        if player == "Player A":
-            E.add_constraint(HigherRank(card_a, card_b) >> Wins("Player A", round_number))
-        else:
-            E.add_constraint(HigherRank(card_b, card_a) >> Wins("Player B", round_number))
-
-def analyze_stacked_deck_outcomes(player):
-    """Analyzes outcomes with a stacked deck ensuring wins for the specified player."""
-    setup_stacked_deck_for_player(player)
-    total_wins = sum([likelihood(E, Wins(player, r)) for r in range(1, 27)])
-    overall_winner = likelihood(E, OverallWinner(player))
-
-    print(f"Total guaranteed wins for {player} with a stacked deck: {total_wins}")
-    print(f"Is {player} the overall winner with a stacked deck? {'Yes' if overall_winner > 0 else 'No'}")
-    
 if __name__ == "__main__":
-    # Run the game setup and analysis
-    shuffle_and_setup_deck()  # Setup with a shuffled deck
+    shuffle_and_setup_deck()
+    setup_rank_comparisons()
     enforce_game_rules()
     handle_tie_breaking()
     determine_overall_winner()
-    analyze_stacked_deck_outcomes("Player A")
+
