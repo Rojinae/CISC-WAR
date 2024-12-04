@@ -7,8 +7,8 @@ import random
 config.sat_backend = "kissat"
 E = Encoding()
 
-# Constants for a standard deck of cards
-RANKS = list(range(1, 14))
+# Constants for the deck
+RANKS = list(range(1, 14))  # 1 for Ace, 11 for Jack, 12 for Queen, 13 for King
 SUITS = ["hearts", "diamonds", "clubs", "spades"]
 
 @proposition(E)
@@ -217,11 +217,101 @@ def determine_overall_winner():
 def one_of(plays):
     """Ensures exactly one of the given plays occurs."""
     return any(plays) & all(~plays[i] | ~plays[j] for i in range(len(plays)) for j in range(len(plays)) if i != j)
+    
+def biased_shuffle():
+    """Biased shuffle to provide strategic advantages."""
+     # Separate high cards and others
+    high_cards = [card for card in deck if card.rank in [10, 11, 12, 13, 1]]  # High cards: 10, Jack, Queen, King, Ace
+    other_cards = [card for card in deck if card.rank not in [10, 11, 12, 13, 1]]
+    
+    # Shuffle both pools
+    random.shuffle(high_cards)
+    random.shuffle(other_cards)
+    
+    # Ensuring that the number of high cards to A does not exceed available high cards
+    high_cards_to_a = min(high_cards_to_a, len(high_cards), total_high_cards)
+    high_cards_to_b = total_high_cards - high_cards_to_a
+    
+    # Build a biased deck: a specific number of high cards to Player A, rest to Player B
+    biased_deck = high_cards[:high_cards_to_a] + other_cards + high_cards[-high_cards_to_b:]
+    random.shuffle(biased_deck)  # Optional: Shuffle the biased deck to mix high cards within each player's portion
+
+    return biased_deck
+
+def setup_strategic_card_distribution():
+    """Distribute cards strategically after a biased shuffle."""
+    biased_deck = biased_shuffle(high_cards_to_a=15, total_high_cards=20)
+    midpoint = len(biased_deck) // 2
+    player_a_cards = biased_deck[:midpoint]
+    player_b_cards = biased_deck[midpoint:]
+    for card in player_a_cards:
+        E.add_constraint(Owns("Player A", card))
+    for card in player_b_cards:
+        E.add_constraint(Owns("Player B", card))
+        
+def enforce_variable_win_conditions():
+    """Add additional win conditions based on sequences or card combinations."""
+    for round_number in range(1, 27):
+        for i in range(len(deck) - 1):
+            card_a1 = deck[i]
+            card_a2 = deck[i + 1]
+            card_b1 = deck[i]
+            card_b2 = deck[i + 1]
+            # Example of a sequence win condition: two consecutive high cards
+            E.add_constraint(
+                (Plays("Player A", card_a1, round_number) & Plays("Player A", card_a2, round_number + 1) &
+                 HigherRank(card_a1, card_b1) & HigherRank(card_a2, card_b2)) >>
+                Wins("Player A", round_number + 1)
+            )
+            E.add_constraint(
+                (Plays("Player B", card_b1, round_number) & Plays("Player B", card_b2, round_number + 1) &
+                 HigherRank(card_b1, card_a1) & HigherRank(card_b2, card_a2)) >>
+                Wins("Player B", round_number + 1)
+            )
+def setup_partial_assignments(win_percentage=70, favored_player="Player A"):
+    """Adjust the game to favor a specific player according to the specified win percentage."""
+    total_rounds = 26  # Assuming a full game involves 26 rounds
+    rounds_to_win = int((win_percentage / 100) * total_rounds)
+    favored_rounds = random.sample(range(1, total_rounds + 1), rounds_to_win)
+
+    for round_number in favored_rounds:
+        for card in deck:
+            if card.rank in [10, 11, 12, 13, 1]:  # High cards: 10, Jack, Queen, King, Ace
+                E.add_constraint(Plays(favored_player, card, round_number))
+                for opponent_card in deck:
+                    if opponent_card.rank < card.rank:
+                        E.add_constraint(Plays("Player B" if favored_player == "Player A" else "Player A", opponent_card, round_number))
+                        E.add_constraint(HigherRank(card, opponent_card) >> Wins(favored_player, round_number))
+            else:
+                E.add_constraint(Plays(favored_player, card, round_number))
+                E.add_constraint(Plays("Player B" if favored_player == "Player A" else "Player A", card, round_number) >> Tie(round_number))
+
+    # Ensure only one card is played by each player per round
+    for round_number in range(1, 27):
+        E.add_constraint(one_of([Plays("Player A", card, round_number) for card in deck]))
+        E.add_constraint(one_of([Plays("Player B", card, round_number) for card in deck]))
+
+def print_results():
+    """Prints the results of the simulation."""
+    likelihood_winner_a = likelihood(E, OverallWinner("Player A"))
+    likelihood_winner_b = likelihood(E, OverallWinner("Player B"))
+    print(f"Likelihood of Player A winning: {likelihood_winner_a}")
+    print(f"Likelihood of Player B winning: {likelihood_winner_b}")
+
+def run_simulation(tests=10, win_percentage=75, strategy="normal"):
+    for _ in range(tests):
+        if strategy == "biased":
+            setup_strategic_card_distribution()
+        else:
+            shuffle_and_setup_deck()
+        
+        setup_rank_comparisons()
+        enforce_game_rules()
+        enforce_variable_win_conditions()
+        setup_partial_assignments(win_percentage=win_percentage, favored_player="Player A")
+        handle_tie_breaking()
+        determine_overall_winner()
+        print_results()
 
 if __name__ == "__main__":
-    shuffle_and_setup_deck()
-    setup_rank_comparisons()
-    enforce_game_rules()
-    handle_tie_breaking()
-    determine_overall_winner()
-
+    run_simulation(tests=10, win_percentage=75, strategy="biased")
